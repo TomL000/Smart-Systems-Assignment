@@ -8,7 +8,7 @@
 
 - [ ] Agree zone definitions and target RH ranges
 - [ ] Set up GitHub repo and branch structure
-- [#] Draft functional requirements FR1–FR12
+- [x] Draft functional requirements FR1–FR12
 - [ ] Draft non-functional requirements NFR1–NFR8
 
 ---
