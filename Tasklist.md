@@ -7,7 +7,7 @@
 ### Phase 1 Design & Requirements
 
 - [ ] Agree zone definitions and target RH ranges
-- [ ] Set up GitHub repo and branch structure
+- [x] Set up GitHub repo and branch structure
 - [x] Draft functional requirements FR1–FR12
 - [x] Draft non-functional requirements NFR1–NFR8
 
