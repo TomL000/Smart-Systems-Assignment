@@ -6,7 +6,7 @@
 
 ### Phase 1 Design & Requirements
 
-- [ ] Agree zone definitions and target RH ranges
+- [x] Agree zone definitions and target RH ranges
 - [x] Set up GitHub repo and branch structure
 - [x] Draft functional requirements FR1–FR12
 - [x] Draft non-functional requirements NFR1–NFR8
@@ -15,8 +15,8 @@
 
 ### Phase 2 UML Diagrams
 
-- [ ] Use Case diagram
-- [ ] System Architecture diagram 
+- [x] Use Case diagram
+- [x] System Architecture diagram 
 - [ ] Sequence diagram: Z1/Z3 conflict flow 
 - [ ] Component diagram
 
