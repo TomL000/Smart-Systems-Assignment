@@ -1,6 +1,8 @@
 import sqlite3
 import random
 import time
+import math
+from datetime import datetime
 
 # Thresholds for a high and low temperatures
 
@@ -10,7 +12,23 @@ humidityThresholdLow = 35
 # Defines a humidity generator
 
 def genHumidity():
-    return round (random.uniform(30, 80), 2)
+    timeNow = datetime.now()
+    hourNow = timeNow.hourNow
+
+    base = 55 + 15 * math.sin((hourNow / 24) * 2 * math.pi - math.pi/2)
+    weatherSpike = random.choice([-10, -5, 0, 5,10])
+    noise = random.uniform(-3, 3)
+    
+    humidity = base + weatherSpike + noise
+
+    if random.random() < 0.05: # this is a 5% chance of happening
+        weatherSpike = random.choice([-20, 20])
+        humidity += weatherSpike
+        print("There has been a spike in weather!")
+
+    humidity = max(20, min(90, humidity))
+
+    return round (humidity, 2)
 
 # Connection to sql database
 
