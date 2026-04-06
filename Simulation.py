@@ -53,7 +53,9 @@ while True:
     sqlCursor.execute("INSERT INTO humidity_readings (humidity) VALUES (?)", (humidity,))
     sqlConnection.commit()
 
-    print (f"[LIVE] Recorded humidity: {humidity}%")
+    print (f"[{datetime.now().strftime('%H:%M:%S')}] [LIVE] Recorded humidity: {humidity}%")
+
+    # Alerts
     if humidity > humidityThresholdHigh:
         print(f"WARNING High Humidity Alert: {humidity}%")
     elif humidity < humidityThresholdLow:
