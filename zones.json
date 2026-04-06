@@ -1,7 +1,11 @@
 {
-   "first_name": "Harry",
-   "age": "22",
-   "Role": "Project Manager",
-   "Zone": "1"
+    "users": [
+        {
+        "first_name": "Harry",
+        "age": "22",
+        "Role": "Project Manager",
+        "Zone": "1"
+        }
+]
 }
 
