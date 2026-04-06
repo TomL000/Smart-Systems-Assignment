@@ -2,6 +2,8 @@ import sqlite3
 import random
 import time
 
+# Thresholds for a high and low 
+
 humidityThresholdHigh = 70
 humidityThresholdLow = 35
 
@@ -22,7 +24,7 @@ sqlCursor.execute(
 while True:
     humidity = genHumidity()
 
-    sqlCursor.execute("INSERT INTO humidity_reading (humidity) VALUES (?)", (humidity,))
+    sqlCursor.execute("INSERT INTO humidity_readings (humidity) VALUES (?)", (humidity,))
     sqlConnection.commit()
 
     print (f"[LIVE] Recorded humidity: {humidity}%")
