@@ -16,15 +16,15 @@ def genHumidity():
     hourNow = timeNow.hourNow
 
     base = 55 + 15 * math.sin((hourNow / 24) * 2 * math.pi - math.pi/2)
-    weatherSpike = random.choice([-10, -5, 0, 5,10])
+    temperatureSpike = random.choice([-10, -5, 0, 5,10])
     noise = random.uniform(-3, 3)
     
-    humidity = base + weatherSpike + noise
+    humidity = base + temperatureSpike + noise
 
     if random.random() < 0.05: # this is a 5% chance of happening
-        weatherSpike = random.choice([-20, 20])
-        humidity += weatherSpike
-        print("There has been a spike in weather!")
+        temperatureSpike = random.choice([-20, 20])
+        humidity += temperatureSpike
+        print("There has been a spike in the temperature!")
 
     humidity = max(20, min(90, humidity))
 
