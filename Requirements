@@ -1,0 +1,23 @@
+Functional Requirements
+  1.	FR1 – The system should monitor humidity from each zone sensor node at a configurable rate.
+  2.	FR2 – The system should support a minimum if four independent zones, each configured with a target humidity/temperature range and priority level.
+  3.	FR3 – The central controller shall classify each zone reading by comparing it against the zone’s configured target range.
+  4.	FR4 – The system will issue an actuation for each zone reading classified as out-of-range
+  5.	FR5 – The system should detect conflicts between zones sharing infrastructure and apply the zone priority hierarchy to determine actuation sequencing.
+  6.	FR6 – All readings, classifications, actuations, and resolutions will be logged to a persistent database with timestamps.
+  7.	FR7 – The dashboard will display the status of all zones and refresh at every interval 
+  8.	FR8 – The dashboard will generate an alert notification and log entry when any zone remains out-of-range for a configured duration.
+  9.	FR9 – An administrator must be able to override command at the dashboard, pausing automatic actuation for a configurable holding period.
+  10.	FR10 – The system will continue monitoring and controlling all zones if a single node fails, logging the fault and continuing operation without system failure.
+  11.	FR 11 – The system shall record an estimated energy consumption figure for each actuation event based on predefined power ratings.
+  12.	FR12 – The dashboard shall display a historical trend chart covering logged humidity levels for each zone.
+
+Non-Functional Requirements
+  1.	NFR1 – Performance: The controller should process a zone reading and issue an actuation within 2 seconds under normal load (4 active zones).
+  2.	NFR2 – Reliability: Upon node failure, the system should detect and log the fault within two missed polling intervals, continuing operation without manual intervention. (centralised architecture trade-off)
+  3.	NFR3 – Scalability: The architecture should support expansion to at least 20 zones without redesign.
+  4.	NFR4 – Security: The dashboard shall require operator authentication; unauthorised requests will be rejected and logged.
+  5.	NFR5 – Usability: An untrained operator with no prior systems knowledge should be able to interpret all zone indicators on the dashboard.
+  6.	NFR6 – Sustainability: System estimated energy consumption should be logged and display an energy summary on the dashboard.
+  7.	NFR7 – Maintainability:
+  8.	NFR8 – Data Integrity: All database write operations should not corrupt previously logged data.
