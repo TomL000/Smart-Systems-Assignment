@@ -13,7 +13,7 @@ humidityThresholdLow = 35
 
 def genHumidity():
     timeNow = datetime.now()
-    hourNow = timeNow.hourNow
+    hourNow = timeNow.hour
 
     base = 55 + 15 * math.sin((hourNow / 24) * 2 * math.pi - math.pi/2)
     temperatureSpike = random.choice([-10, -5, 0, 5,10])
@@ -45,28 +45,32 @@ sqlCursor.execute(
     )"""
 )
 
+print (" Starting monitoring program")
 # Live while loop that executes the humidity readings and compares them into the threshholds
+try:
+    while True:
+        humidity = genHumidity()
 
-while True:
-    humidity = genHumidity()
+        sqlCursor.execute("INSERT INTO humidity_readings (humidity) VALUES (?)", (humidity,))
+        sqlConnection.commit()
 
-    sqlCursor.execute("INSERT INTO humidity_readings (humidity) VALUES (?)", (humidity,))
-    sqlConnection.commit()
+        print (f"[{datetime.now().strftime('%H:%M:%S')}] [LIVE] Recorded humidity: {humidity}%")
 
-    print (f"[{datetime.now().strftime('%H:%M:%S')}] [LIVE] Recorded humidity: {humidity}%")
+        # Alerts
+        if humidity > humidityThresholdHigh:
+            print(f"WARNING High Humidity Alert: {humidity}%")
+        elif humidity < humidityThresholdLow:
+            print(f"WARNING Low Humidity Alert: {humidity}%")
+        time.sleep(30)
 
-    # Alerts
-    if humidity > humidityThresholdHigh:
-        print(f"WARNING High Humidity Alert: {humidity}%")
-    elif humidity < humidityThresholdLow:
-        print(f"WARNING Low Humidity Alert: {humidity}%")
-    time.sleep(30)
+except KeyboardInterrupt:
+    print("Stopping monitoring...")
 
-# fetches from the sql table and prints in a row from this file.
-sqlCursor.execute("SELECT * FROM humidity readings")
-sqlRows = sqlCursor.fetchall()
+    sqlCursor.execute("SELECT * FROM humidity_readings")
+    rows = sqlCursor.fetchall()
 
-for row in sqlRows:
-    print(row)
+    print("Stored readings:")
+    for now in rows[-10:]: 
+        print(rows)
 
-sqlConnection.close()
+    sqlConnection.close()
