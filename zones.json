@@ -1,10 +1,24 @@
 {
-    "users": [
+    "zones": [
         {
-        "first_name": "Harry",
-        "age": "22",
-        "Role": "Project Manager",
-        "Zone": "1"
+        "zoneNum": "1",
+        "minHumidity": 85,
+        "maxHumidity": 95
+        },
+        {
+        "zoneNum": "2",
+        "minHumidity": 60,
+        "maxHumidity": 75
+        },
+        {
+        "zoneNum": "3",
+        "minHumidity": 45,
+        "maxHumidity": 60
+        },
+        {
+        "zoneNum": "4",
+        "minHumidity": 90,
+        "maxHumidity": 95
         }
 ]
 }

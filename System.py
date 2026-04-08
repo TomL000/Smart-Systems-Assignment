@@ -3,6 +3,7 @@ import sqlite3
 import time
 import sys
 import json
+import datetime
 
 # Simple SQL connection to humidity.db
 sqlConnection = sqlite3.connect('humidity.db')
@@ -45,15 +46,41 @@ def humidityAdjustment():
     with open("zones,json", "r") as file:
         data = json.load(file)
     zones = data["zones"]
+    minPrevious = 0
+    maxPrevious = 0
     for zone in zones:
         if zone["zoneNum"] == zoneToAdjust:
+            minPrevious = zone["minHumidity"]
+            maxPrevious = zone["maxHumidity"]
             zone["minHumidity"] = minAdjust
             zone["maxHumidity"] = maxAdjust
             break
     with open("zones.json", "w") as file:
         json.dump(data, file)
     print("\nAdjustment saved.\n")
-    ## add code to open log.db and log information about humidity adjustment: id, previous, new, timestamp
+
+    # Create/open log database, create/open log table
+    sqlCursor.execute("""
+    CREATE TABLE IF NOT EXISTS log1 (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        zoneNum TEXT,
+        previousMin REAL,
+        newMin REAL,
+        previousMax REAL,
+        newMax REAL,
+        timestamp TEXT
+    );
+    """)
+
+    # insert previous & new humidity thresholds & timestamp to log table
+    sqlCursor.execute("""
+    INSERT INTO log1 (zoneNum, previousMin, newMin, previousMax, newMax, timestamp)
+    VALUES (?, ?, ?, ?, ?, ?);
+    """, (
+        zoneToAdjust, minPrevious, minAdjust, maxPrevious, maxAdjust, datetime.datetime.now().isoformat()
+    ))
+
+    #
     time.sleep(2)
 
 
@@ -135,10 +162,6 @@ def main():
 # executes main code
 main()
 
-
-
-
-
-
+# save and close humidity.db
 sqlConnection.commit()
 sqlConnection.close()
