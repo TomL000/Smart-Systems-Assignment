@@ -5,12 +5,6 @@ import sys
 import json
 import datetime
 
-# Simple SQL connection to humidity.db
-sqlConnection = sqlite3.connect('humidity.db')
-sqlCursor = sqlConnection.cursor()
-
-#global variable assignment
-zoneComparison = {}
 
 # displays program name to user. feel free to rename or adjust
 print("# # # HUMIDITY MANAGEMENT SYSTEM # # #\n")
@@ -43,7 +37,7 @@ def humidityAdjustment():
         return
 
     # writes user inputs to  the relevant zone in the zones.json file
-    with open("zones,json", "r") as file:
+    with open("zones.json", "r") as file:
         data = json.load(file)
     zones = data["zones"]
     minPrevious = 0
@@ -59,7 +53,9 @@ def humidityAdjustment():
         json.dump(data, file)
     print("\nAdjustment saved.\n")
 
-    # Create/open log database, create/open log table
+    # Create/open humidity database, create/open log1 table
+    sqlConnection = sqlite3.connect('humidity.db')
+    sqlCursor = sqlConnection.cursor()
     sqlCursor.execute("""
     CREATE TABLE IF NOT EXISTS log1 (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -80,6 +76,8 @@ def humidityAdjustment():
         zoneToAdjust, minPrevious, minAdjust, maxPrevious, maxAdjust, datetime.datetime.now().isoformat()
     ))
 
+    sqlConnection.commit()
+    sqlConnection.close()
     #
     time.sleep(2)
 
@@ -93,7 +91,7 @@ def displayZones():
     for zone in zones:
         print(f"Zone {zone['zoneNum']}: "
               f"Min Humidity = {zone['minHumidity']}%, "
-              f"Max Humidity = {zone['maxHumidity']}%")
+              f"Max Humidity = {zone['maxHumidity']}%\n")
 
 
 # function displaying functional menu to user
@@ -117,51 +115,6 @@ def userMenu():
         # quits the program
         elif menuInput == "4":
             print("Quitting system . . . .")
+            # save and close humidity.db
             time.sleep(2)
             sys.exit()
-
-
-# function to compare humidity.db values against humidity threshold of relevant zone
-## we may want to adjust this to separate each zone in the database. as of right now, if the zone readings are somehow mixed up then it will adjust for the wrong zone.
-def humidityMonitor():
-    sqlCursor.execute("""
-        SELECT *
-        FROM humidity_readings
-        ORDER BY id DESC
-        LIMIT 4
-    """)
-    rows = sqlCursor.fetchall()
-    rows.reverse()
-    with open("zones.json", "r") as file:
-        data = json.load(file)
-    zones = data["zones"]
-    # stores comparison results in zoneComparison dictionary
-    for row in rows:
-        ## adjust this for whichever column humidity value is kept in ! ! !
-        humidity = row[1]
-        if humidity < zones["minHumidity"]:
-            zoneComparison[row] = "<"
-        elif humidity > zones["maxHumidity"]:
-            zoneComparison[row] = ">"
-        else:
-            zoneComparison[row] = "="
-
-
-# main code sequence
-def main():
-    userMenu()
-    print("Press CTRL+C to pause humidity monitoring and return to menu.")
-    # loops humidity monitoring function until user hits CTRL-C to return to menu, where they may quit, adjust or continue.
-    while True:
-        try:
-            humidityMonitor()
-            time.sleep(30)
-        except KeyboardInterrupt:
-            userMenu()
-
-# executes main code
-main()
-
-# save and close humidity.db
-sqlConnection.commit()
-sqlConnection.close()
