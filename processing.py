@@ -1,4 +1,6 @@
 # importing libraries
+from doctest import DocTestCase
+
 from presentation import userMenu
 import sqlite3
 import json
@@ -13,23 +15,34 @@ def humidityMonitor():
     #opening sql connection to humidity.db
     sqlConnection = sqlite3.connect('humidity.db')
     sqlCursor = sqlConnection.cursor()
-    sqlCursor.execute("""
-        SELECT *
-        FROM humidity_readings
-        ORDER BY id DESC
-        LIMIT 4
-    """)
-    rows = sqlCursor.fetchall()
-    rows.reverse()
+
     with open("zones.json", "r") as file:
         data = json.load(file)
-    zones = data["zones"]
-    # stores comparison results in zoneComparison dictionary
-    for i, row in enumerate(rows):
-        humidity = row[2]
-        zone = zones[i]
-        zoneNum = zone["zoneNum"]
 
+    zones = data["zones"]
+
+    tables = [
+        "zone1_propagation",
+        "zone2_vegetation",
+        "zone3_flowering",
+        "zone4_storage",
+    ]
+
+    # loops for each zone. each value in tables specifies the humidity.db table fetched from.
+    for i, zone in enumerate(zones):
+        zoneNum = zone["zoneNum"]
+        tableNum = tables[i]
+
+        sqlCursor.execute(f"""
+            SELECT *
+            FROM {tableNum}
+            ORDER BY id DESC
+            LIMIT 1
+        """)
+
+        row = sqlCursor.fetchone()
+
+        humidity = row[2]
         if int(humidity) < int(zone["minHumidity"]):
             zoneComparison[zoneNum] = "<"
         elif int(humidity) > int(zone["maxHumidity"]):
