@@ -1,0 +1,25 @@
+{
+    "zones": [
+        {
+        "zoneNum": "1",
+        "minHumidity": 70,
+        "maxHumidity": 80
+        },
+        {
+        "zoneNum": "2",
+        "minHumidity": 60,
+        "maxHumidity": 70
+        },
+        {
+        "zoneNum": "3",
+        "minHumidity": 40,
+        "maxHumidity": 60
+        },
+        {
+        "zoneNum": "4",
+        "minHumidity": 50,
+        "maxHumidity": 65
+        }
+]
+}
+
