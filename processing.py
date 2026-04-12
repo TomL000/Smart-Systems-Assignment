@@ -53,6 +53,3 @@ def humidityMonitor():
             zoneComparison[zoneNum] = "="
 
     sqlConnection.close()
-
-    # temporary printing comparison for feedback that program works
-    print(zoneComparison)

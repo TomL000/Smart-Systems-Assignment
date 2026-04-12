@@ -4,7 +4,10 @@ import time
 import datetime
 import sqlite3
 from processing import humidityMonitor
-#H# adding simulation layer start-up
+#H#
+#add actuation
+from actuation import actuate
+#adding simulation layer start-up
 import threading
 import Simulation #DEV ONLY - simulates deployed sensor feed
 
@@ -61,6 +64,7 @@ def main():
     while True:
         try:
             humidityMonitor()
+            actuate()
             time.sleep(30)
         except KeyboardInterrupt:
             print("\nINTERRUPT\n")
