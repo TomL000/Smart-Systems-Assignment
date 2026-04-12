@@ -57,7 +57,7 @@ def humidityAdjustment():
     sqlConnection = sqlite3.connect('humidity.db')
     sqlCursor = sqlConnection.cursor()
     sqlCursor.execute("""
-    CREATE TABLE IF NOT EXISTS log1 (
+    CREATE TABLE IF NOT EXISTS logAdjust (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         zoneNum TEXT,
         previousMin REAL,
@@ -70,7 +70,7 @@ def humidityAdjustment():
 
     # insert previous & new humidity thresholds & timestamp to log table
     sqlCursor.execute("""
-    INSERT INTO log1 (zoneNum, previousMin, newMin, previousMax, newMax, timestamp)
+    INSERT INTO logAdjust (zoneNum, previousMin, newMin, previousMax, newMax, timestamp)
     VALUES (?, ?, ?, ?, ?, ?);
     """, (
         zoneToAdjust, minPrevious, minAdjust, maxPrevious, maxAdjust, datetime.datetime.now().isoformat()
@@ -106,6 +106,16 @@ def userMenu():
         # exits menu while loop and moves on to running automated humidity management system
         elif menuInput == "2":
             print("Starting system . . . .")
+            sqlConnection = sqlite3.connect('humidity.db')
+            sqlCursor = sqlConnection.cursor()
+            sqlCursor.execute("""
+                INSERT INTO logActions (action, timestamp)
+                VALUES (?, ?);
+                """, (
+                    "Comparison Start", datetime.datetime.now().isoformat()
+                ))
+            sqlConnection.commit()
+            sqlConnection.close()
             time.sleep(2)
             break
         # prints current max & min humidity values of each zone to terminal
@@ -115,6 +125,16 @@ def userMenu():
         # quits the program
         elif menuInput == "4":
             print("Quitting system . . . .")
+            sqlConnection = sqlite3.connect('humidity.db')
+            sqlCursor = sqlConnection.cursor()
+            sqlCursor.execute("""
+                INSERT INTO logActions (action, timestamp)
+                VALUES (?, ?);
+                """, (
+                    "Quit", datetime.datetime.now().isoformat()
+                ))
+            sqlConnection.commit()
+            sqlConnection.close()
             # save and close humidity.db
             time.sleep(2)
             sys.exit()
