@@ -1,0 +1,189 @@
+import tkinter as tk #gui
+from tkinter import Tk
+import sqlite3
+import json
+import datetime
+import threading
+import Simulation
+from processing import humidityMonitor, zoneComparison
+from actuation import actuate
+
+#colour palette
+BG_MAIN = "#1e1e2e"
+BG_PANEL = "#2a2a3e"
+FG_TEXT = "#cdd6f4"
+FG_HEADER = "#89b4fa"
+FG_ALERT = "#f38ba8"
+FG_OK = "#a6e3a1"
+FG_WARN = "#fab387"
+
+#set window properties
+class HumidityApp:
+    def __init__(self, root): #initialise properties
+        self.root = root
+        self.root.title("Humidizone Management System")
+        self.root.configure(bg=BG_MAIN)
+        self.root.geometry("700x600")
+        #set states
+        self.systemRunning = False
+        self.adminLoggedIn = False
+
+        #build UI
+        self.buildHeader()
+        self.buildReadingsPanel()
+        self.buildActuationPanel()
+        self.buildButtonPanel()
+        
+    def buildHeader(self):
+        #top section: title & system status
+        frame = tk.Frame(self.root, bg=BG_MAIN)
+        frame.pack(fill="x", padx=20, pady=10)
+        tk.Label(frame, text="HUMIDIZONE MANAGEMENT SYSTEM",
+            font=("Helvetica", 16, "bold"),
+            bg=BG_MAIN, fg=FG_HEADER).pack()
+        #dynamic status lable, off by default
+        self.statusLabel = tk.Label(frame, text="System Offline",
+            font=("Helvetica", 10),
+            bg=BG_MAIN, fg=FG_ALERT)
+        self.statusLabel.pack()
+
+    def buildReadingsPanel(self):
+        #middle section: live humidity per zone
+        frame = tk.LabelFrame(self.root, text="Live Readings",
+            bg=BG_PANEL, fg=FG_HEADER,
+            font=("Helvetica", 11, "bold"))
+        frame.pack(fill="x", padx=20, pady=5)
+        self.readingsFrame = frame
+        self.readingLabels = {} #stores label references by zoneNum
+
+        #build rows per zone from zone.json
+        with open("zones.json", "r") as f:
+            data = json.load(f)
+        for zone in data ["zones"]:
+            zoneNum = zone["zoneNum"]
+            zoneName = f"zone{zoneNum}_{zone['zoneName']}"
+            row = tk.Frame(frame, bg=BG_PANEL)
+            row.pack(fill="x", padx=10, pady=2)
+            #zone name labels
+            tk.Label(row, text=f"Zone {zoneNum} | {zoneName}",
+                width=30, anchor="w",
+                bg=BG_PANEL, fg=FG_TEXT,
+                font=("Helvetica", 10)).pack(side="left")
+            #dynamic humidity level label - updated by updateReadings()
+            label = tk.Label(row, text="-- %",
+                bg=BG_PANEL, fg=FG_TEXT,
+                font=("Helvetica", 10, "bold"))
+            label.pack(side="left")
+            self.readingLabels[zoneNum] = label
+            
+    def buildActuationPanel(self):
+        #lower middle section: actuator state per zone
+        frame = tk.LabelFrame(self.root, text="Actuation Status",
+            bg=BG_PANEL, fg=FG_HEADER,
+            font=("Helvetica", 11, "bold"))
+        frame.pack(fill="x", padx=20, pady=5)
+        self.actuationFrame = frame
+        self.actuationLabels = {} #stores label references by zoneNum
+
+        with open("zones.json", "r") as f:
+            data = json.load(f)
+        for zone in data["zones"]:
+            zoneNum = zone["zoneNum"]
+            row = tk.Frame(frame, bg=BG_PANEL)
+            row.pack(fill="x", padx=10, pady=2)
+            tk.Label(row, text=f"zone {zoneNum}:",
+                width=10, anchor="w",
+                bg=BG_PANEL, fg=FG_TEXT,
+                font=("Helvetica", 10)).pack(side="left")
+            #dynamic humidity level label - updated by updateReadings()
+            label = tk.Label(row, text="OFFLINE",
+                bg=BG_PANEL, fg=FG_ALERT,
+                font=("Helvetica", 10, "bold"))
+            label.pack(side="left")
+            self.actuationLabels[zoneNum] = label #stores references for later updates
+
+    def buildButtonPanel(self):
+        #bottom section: control buttons
+        frame = tk.Frame(self.root, bg=BG_MAIN)
+        frame.pack(fill="x", padx=20, pady=10)
+        tk.Button(frame, text="Start System",
+            command=self.startSystem, #calls startSystem() on click
+            bg=FG_OK, fg=BG_MAIN,
+            font=("Helvetica", 10, "bold"),
+            width=15).grid(row=0, column=0, padx=5, pady=5)
+        tk.Button(frame, text="Stop System",
+            command=self.stopSystem, #calls stopSystem() on click
+            bg=FG_ALERT, fg=BG_MAIN,
+            font=("Helvetica", 10, "bold"),
+            width=15).grid(row=0, column=1, padx=5, pady=5)
+        tk.Button(frame, text="Quit",
+            command=self.root.quit, #closes window on click
+            bg=BG_PANEL, fg=FG_TEXT,
+            font=("Helvetica", 10),
+            width=15).grid(row=0, column=2, padx=5, pady=5)
+                
+    def startSystem(self):
+        if not self.systemRunning:
+            self.systemRunning = True
+            self.statusLabel.config(text="System Online", fg=FG_OK)
+            dev_thread = threading.Thread(target=Simulation.run,daemon=True)
+            dev_thread.start()
+            self.root.after(12000, self.updateReadings)
+
+    def stopSystem(self):
+        self.systemRunning = False
+        self.statusLabel.config(text="Systems Offline", fg=FG_ALERT)
+        #reset all actuation labels to offline
+        for label in self.actuationLabels.values():
+            label.config(text="OFFLINE", fg=FG_ALERT)
+                
+    def updateReadings(self):
+        if not self.systemRunning:
+            return
+        
+        sqlConnection = sqlite3.connect('humidity.db')
+        sqlCursor = sqlConnection.cursor()
+
+        with open("zones.json", "r") as f:
+            data = json.load(f)
+
+        for zone in data["zones"]:
+            zoneNum = zone["zoneNum"]
+            tableName = f"zone{zoneNum}_{zone['zoneName']}"
+            sqlCursor.execute(f"SELECT humidity FROM {tableName} ORDER BY id DESC LIMIT 1")
+            row = sqlCursor.fetchone()
+            if row:
+                humidity = row[0]
+                minH = int(zone["minHumidity"])
+                maxH = int(zone["maxHumidity"])
+                #green if in-range, red if out
+                colour = FG_OK if minH <= humidity <= maxH else FG_ALERT
+                self.readingLabels[zoneNum].config(text=f"{humidity}%", fg=colour)
+
+        sqlConnection.close()
+
+        #monitoring and actuation logic
+        humidityMonitor() #updates zoneComparison
+        actuate() #logs actuation and energy to database
+
+        #update actuation status labels from zoneComparison
+        for zoneNum, comparison in zoneComparison.items():
+            if comparison == "<":
+                text, colour = "HUMIDIFIER ON", FG_WARN
+            elif comparison == ">":
+                text, colour = "DEHUMIDIFIER ON", FG_WARN
+            else:
+                text, colour = "IDLE", FG_OK
+            self.actuationLabels[zoneNum].config(text=text, fg=colour)
+
+        #schedule update in 30 seconds
+        self.root.after(30000, self.updateReadings)
+
+def main():
+    root = tk.Tk() #create window
+    app = HumidityApp(root) #initialise app
+    root.mainloop() #start event loop
+    
+if __name__ == "__main__":
+    main()
+            
