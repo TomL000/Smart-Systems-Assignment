@@ -3,21 +3,20 @@
 #importing libraies
 import sqlite3
 import datetime
+import json
 from processing import zoneComparison
-
-#zone name mapping for readble log messages
-zoneNames = {
-    "1": "zone1_propagation",
-    "2": "zone2_vegetation",
-    "3": "zone3_flowering",
-    "4": "zone4_storage"
-}
 
 #actuation function
 def actuate():
     #connect to database
     sqlConnection = sqlite3.connect('humidity.db')
     sqlCursor = sqlConnection.cursor()
+
+    #load zone profiles from zones.json
+    with open ("zones.json", "r") as file:
+        data = json.load(file)
+    zoneNames = {z["zoneNum"]: f"zone{z['zoneNum']}_{z['zoneName']}" for z in data["zones"]}
+
 
     #create actuation log table if it doesn't exist
     sqlCursor.execute("""
@@ -52,7 +51,7 @@ def actuate():
         sqlCursor.execute("""
         INSERT INTO logActuation (zoneNum, action, reason, timestamp)
         VALUES (?, ?, ?, ?)
-        """, (zoneNum, action, reason, datetime.datetime.now().isoformat()))
+        """, (zoneNum, action, reason, datetime.datetime.now().isoformat())) #convert to string
 
     sqlConnection.commit()
     sqlConnection.close()

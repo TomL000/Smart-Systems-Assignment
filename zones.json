@@ -2,23 +2,33 @@
     "zones": [
         {
         "zoneNum": "1",
+        "zoneName": "propagation",
         "minHumidity": 70,
         "maxHumidity": 80
         },
         {
         "zoneNum": "2",
+        "zoneName": "vegetation",
         "minHumidity": 60,
         "maxHumidity": 70
         },
         {
         "zoneNum": "3",
+        "zoneName": "flowering",
         "minHumidity": 40,
         "maxHumidity": 60
         },
         {
         "zoneNum": "4",
+        "zoneName": "storage",
         "minHumidity": 50,
         "maxHumidity": 65
+        },
+        {
+        "zoneNum": "5",
+        "zoneName": "test",
+        "minHumidity": 25,
+        "maxHumidity": 40
         }
 ]
 }

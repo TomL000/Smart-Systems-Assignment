@@ -5,6 +5,7 @@ import datetime
 import sqlite3
 from processing import humidityMonitor
 #H#
+import json #add json integration
 #add actuation
 from actuation import actuate
 #adding simulation layer start-up
@@ -37,18 +38,19 @@ def main():
     sqlConnection.commit()
     sqlConnection.close()
 
-    #H# Resolving zone sequencing issue by creating tables in main.py
+    #H# Resolving zone sequencing issue by creating tables in main.py, zone profiles loaded from zones.json rather than hardcoded
     sqlConnection = sqlite3.connect('humidity.db')
     sqlCursor = sqlConnection.cursor()
-    zone_tables = [
-        "zone1_propagation",
-        "zone2_vegetation",
-        "zone3_flowering",
-        "zone4_storage"
-    ]
-    for zone in zone_tables:
+    
+    #load json data
+    with open("zones.json", "r") as file:
+        data = json.load(file)
+
+    #create sql tables from zones.json
+    for zone in data ["zones"]:
+        tableName = f"zone{zone['zoneNum']}_{zone['zoneName']}"
         sqlCursor.execute(f"""
-        CREATE TABLE IF NOT EXISTS {zone} (
+        CREATE TABLE IF NOT EXISTS {tableName} (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
             humidity REAL

@@ -2,6 +2,7 @@ import sqlite3
 import random
 import time
 import math
+import json ##H# for zone.json integration
 from datetime import datetime
 
 # Thresholds for a high and low temperatures
@@ -9,33 +10,13 @@ from datetime import datetime
 humidityThresholdHigh = 70
 humidityThresholdLow = 35
 
-zones = {
-    "zone1_propagation": (85, 95),
-    "zone2_vegetation": (60, 75),
-    "zone3_flowering": (45, 60),
-    "zone4_storage": (90, 95)
-}
 
 # Defines a humidity generator
-##H# set zone as a parameter
-def genHumidity(zone):
+##H# set zone, low & high values as parameters
+def genHumidity(zone, low, high):
     timeNow = datetime.now().hour
-
     smallVariation = 3 * math.sin((timeNow / 24) * 2 * math.pi)
-
-    # simulated humidity per zone
-    if zone == "zone1_propagation":
-        base = random.uniform(85, 95)
-
-    elif zone == "zone2_vegetation":
-        base = random.uniform(60, 75)
-
-    elif zone == "zone3_flowering":
-        base = random.uniform(45, 60)
-
-    elif zone == "zone4_storage":
-        base = random.uniform(90, 95)
-
+    base = random.uniform(low, high) ##H#uses zone.json profile instead of hardcoded value
     humidity = base + smallVariation + random.uniform(-2, 2)
 
     # Rare weather spike
@@ -56,14 +37,24 @@ print (" Starting multi-zone monitoring program")
 # Live while loop that executes the humidity readings and compares them into the threshholds
 ##H# wrapping while loop into a function to be called in main.py
 def run():
+
+    #H# loads simulation profiles from zones.json
+    with open("zones.json", "r") as file:
+        data = json.load(file)
+
+    #build zones dictionary from zones.json
+    zones = {f"zone{z['zoneNum']}_{z['zoneName']}": (int(z["minHumidity"]), int(z["maxHumidity"])) for z in data["zones"]}
+    #H#
+
     #connection to sql database
     sqlConnection = sqlite3.connect("humidity.db")
     sqlCursor = sqlConnection.cursor()
+    print("Starting multi-zone monitoring simulation")
     try:
         while True:
             readings = {}
             for zone in zones:
-                humidity = genHumidity(zone)
+                humidity = genHumidity(zone, zones[zone][0], zones[zone][1]) ##H# set low and high values for each zone
                 readings[zone] = humidity
 
                 sqlCursor.execute(f"INSERT INTO {zone} (humidity) VALUES (?)", (humidity,))

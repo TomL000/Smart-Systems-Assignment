@@ -19,31 +19,27 @@ def humidityMonitor():
 
     zones = data["zones"]
 
-    tables = [
-        "zone1_propagation",
-        "zone2_vegetation",
-        "zone3_flowering",
-        "zone4_storage",
-    ]
-
     # loops for each zone. each value in tables specifies the humidity.db table fetched from.
     for i, zone in enumerate(zones):
         zoneNum = zone["zoneNum"]
-        tableNum = tables[i]
+        ##H# replace table number with name
+        tableName = f"zone{zone['zoneNum']}_{zone['zoneName']}"
 
         sqlCursor.execute(f"""
             SELECT *
-            FROM {tableNum}
+            FROM {tableName}
             ORDER BY id DESC
             LIMIT 1
         """)
 
         row = sqlCursor.fetchone()
+
         #H# fail safe for empty table
         if row is None:
             print(f"No data yet for zone {zoneNum}, skipping.")
             continue
         #H#
+
         humidity = row[2]
         if int(humidity) < int(zone["minHumidity"]):
             zoneComparison[zoneNum] = "<"
