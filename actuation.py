@@ -11,7 +11,7 @@ watt_system_base = 10
 watt_humidifier = 50
 watt_dehumidifier = 40
 watt_idle = 5
-interval_seconds = 30 #matches main.py sleep interval
+interval_seconds = 30 #matches main.py sleep interval (simulation)
 
 #actuation function
 def actuate():

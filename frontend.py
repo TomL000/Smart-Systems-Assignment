@@ -46,6 +46,12 @@ class HumidityApp:
             font=("Helvetica", 10),
             bg=BG_MAIN, fg=FG_ALERT)
         self.statusLabel.pack()
+        #login button
+        self.loginButton = tk.Button(frame, text="Login as admin",
+            command=self.adminLogin,
+            bg=BG_PANEL, fg=FG_TEXT,
+            font=("Helvetica", 9))
+        self.loginButton.pack()
 
     def buildReadingsPanel(self):
         #middle section: live humidity per zone
@@ -178,6 +184,80 @@ class HumidityApp:
 
         #schedule update in 30 seconds
         self.root.after(30000, self.updateReadings)
+
+    #password auth checker
+    def checkPassword(self, entered):
+        with open("password.txt", "r") as f:
+            password = f.read().strip()
+        return entered == password
+
+    def adminLogin(self):
+        #popup dialog for admin
+        dialog = tk.Toplevel(self.root)
+        dialog.title("Admin Login")
+        dialog.configure(bg=BG_MAIN)
+        dialog.geometry("300x150")
+        dialog.resizable(False, False)
+
+        tk.Label(dialog, text="enter admin password",
+            bg=BG_MAIN, fg=FG_TEXT,
+            font=("Helvetica", 10)).pack(pady=10)
+        
+        passwordEntry = tk.Entry(dialog, show="*",
+            bg=BG_PANEL, fg=FG_TEXT,
+            font=("Helvetica", 10))
+        passwordEntry.pack(pady=5)
+
+        def attempt():
+            if self.checkPassword(passwordEntry.get()):
+                self.adminLoggedIn = True
+                self.loginButton.config(text="Admin Logged In", fg=FG_OK)
+                self.buildAdminPanel()
+                dialog.destroy()
+            else:
+                tk.Label(dialog, text="Incorrect password",
+                    bg=BG_MAIN, fg=FG_ALERT,
+                    font=("Helvetica", 9)).pack()
+
+        tk.Button(dialog, text="Login",
+            command=attempt,
+            bg=FG_OK, fg=BG_MAIN,
+            font=("Helvetica", 10, "bold"),
+            width=10).pack(pady=5)
+
+    def adminLogout(self):
+        self.adminLoggedIn = False
+        self.loginButton.config(text="Login as Admin", fg=FG_TEXT)
+        #remove admin panel from window
+        self.adminPanel.destroy()
+
+    def buildAdminPanel(self):
+        #only called after successful auth
+        self.adminPanel = tk.LabelFrame(self.root, text="Admin Controls",
+            bg=BG_PANEL, fg=FG_HEADER,
+            font=("Helvetica", 11, "bold"))
+        self.adminPanel.pack(fill="x", padx=20, pady=5)
+        tk.Button(self.adminPanel, text="Adjust Thresholds",
+            command=self.adjustThresholds,
+            bg=FG_WARN, fg=BG_MAIN,
+            font=("Helvetica", 10, "bold"),
+            width=18).grid(row=0, column=0, padx=5, pady=5)
+        tk.Button(self.adminPanel, text="Manual Override",
+            command=self.manualOverride,
+            bg=FG_WARN, fg=BG_MAIN,
+            font=("Helvetica", 10, "bold"),
+            width=18).grid(row=0, column=1, padx=5, pady=5)
+        tk.Button(self.adminPanel, text="Logout",
+            command=self.adminLogout,
+            bg=BG_PANEL, fg=FG_TEXT,
+            font=("Helvetica", 10),
+            width=10).grid(row=0, column=2, padx=5, pady=5)
+    
+    def adjustThresholds(self):
+        pass
+
+    def manualOverride(self):
+        pass
 
 def main():
     root = tk.Tk() #create window
