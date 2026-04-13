@@ -27,7 +27,7 @@
         {
             "zoneNum": "5",
             "zoneName": "test",
-            "minHumidity": 25,
+            "minHumidity": 20,
             "maxHumidity": 30
         }
     ]
