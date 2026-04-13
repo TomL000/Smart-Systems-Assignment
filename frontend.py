@@ -254,7 +254,117 @@ class HumidityApp:
             width=10).grid(row=0, column=2, padx=5, pady=5)
     
     def adjustThresholds(self):
-        pass
+        dialog = tk.Toplevel(self.root)
+        dialog.title("Adjust Thresholds")
+        dialog.configure(bg=BG_MAIN)
+        dialog.geometry("500x300")
+        dialog.resizable(False, False)
+
+        with open("zones.json", "r") as f:
+            data = json.load(f)
+
+        entries = {}  #stores entries by zoneNum
+
+        #header row
+        tk.Label(dialog, text="Zone", width=20, anchor="w",
+            bg=BG_MAIN, fg=FG_HEADER,
+            font=("Helvetica", 10, "bold")).grid(row=0, column=0, padx=10, pady=5)
+        tk.Label(dialog, text="Min %", width=10,
+            bg=BG_MAIN, fg=FG_HEADER,
+            font=("Helvetica", 10, "bold")).grid(row=0, column=1, padx=5)
+        tk.Label(dialog, text="Max %", width=10,
+            bg=BG_MAIN, fg=FG_HEADER,
+            font=("Helvetica", 10, "bold")).grid(row=0, column=2, padx=5)
+
+        #build a row per zone with current values
+        for i, zone in enumerate(data["zones"]):
+            zoneNum = zone["zoneNum"]
+            zoneName = f"zone{zoneNum}_{zone['zoneName']}"
+            tk.Label(dialog, text=zoneName, width=20, anchor="w",
+                bg=BG_MAIN, fg=FG_TEXT,
+                font=("Helvetica", 10)).grid(row=i+1, column=0, padx=10, pady=3)
+
+            minEntry = tk.Entry(dialog, width=10,
+                bg=BG_PANEL, fg=FG_TEXT,
+                font=("Helvetica", 10))
+            minEntry.insert(0, zone["minHumidity"])
+            minEntry.grid(row=i+1, column=1, padx=5)
+
+            maxEntry = tk.Entry(dialog, width=10,
+                bg=BG_PANEL, fg=FG_TEXT,
+                font=("Helvetica", 10))
+            maxEntry.insert(0, zone["maxHumidity"])
+            maxEntry.grid(row=i+1, column=2, padx=5)
+
+            entries[zoneNum] = (minEntry, maxEntry)
+
+        #feedback label for validation errors
+        feedbackLabel = tk.Label(dialog, text="",
+            bg=BG_MAIN, fg=FG_ALERT,
+            font=("Helvetica", 9))
+        feedbackLabel.grid(row=len(data["zones"])+1, column=0, columnspan=3, pady=5)
+
+        def save():
+            #update sql with new zones
+            with open("zones.json", "r") as f:
+                data = json.load(f)
+
+            sqlConnection = sqlite3.connect('humidity.db')
+            sqlCursor = sqlConnection.cursor()
+            sqlCursor.execute("""
+            CREATE TABLE IF NOT EXISTS logAdjust (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                zoneNum TEXT,
+                previousMin REAL,
+                newMin REAL,
+                previousMax REAL,
+                newMax REAL,
+                timestamp TEXT
+            )""")
+
+            for zone in data["zones"]:
+                zoneNum = zone["zoneNum"]
+                minVal = entries[zoneNum][0].get()
+                maxVal = entries[zoneNum][1].get()
+
+                #validate inputs
+                if not minVal.isdigit() or not maxVal.isdigit():
+                    feedbackLabel.config(text=f"Zone {zoneNum}: values must be numbers")
+                    sqlConnection.close()
+                    return
+                if int(minVal) >= int(maxVal):
+                    feedbackLabel.config(text=f"Zone {zoneNum}: min must be less than max")
+                    sqlConnection.close()
+                    return
+                if int(minVal) < 0 or int(maxVal) > 100:
+                    feedbackLabel.config(text=f"Zone {zoneNum}: values must be between 0-100")
+                    sqlConnection.close()
+                    return
+
+                #log previous and new values
+                sqlCursor.execute("""
+                INSERT INTO logAdjust (zoneNum, previousMin, newMin, previousMax, newMax, timestamp)
+                VALUES (?, ?, ?, ?, ?, ?)
+                """, (zoneNum, zone["minHumidity"], minVal,
+                    zone["maxHumidity"], maxVal,
+                    datetime.datetime.now().isoformat()))
+
+                #update values
+                zone["minHumidity"] = int(minVal)
+                zone["maxHumidity"] = int(maxVal)
+
+            with open("zones.json", "w") as f:
+                json.dump(data, f, indent=4)
+
+            sqlConnection.commit()
+            sqlConnection.close()
+            dialog.destroy()
+
+        tk.Button(dialog, text="Save",
+            command=save,
+            bg=FG_OK, fg=BG_MAIN,
+            font=("Helvetica", 10, "bold"),
+            width=10).grid(row=len(data["zones"])+2, column=0, columnspan=3, pady=10)
 
     def manualOverride(self):
         pass
