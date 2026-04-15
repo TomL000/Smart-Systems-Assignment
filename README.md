@@ -11,10 +11,10 @@ HumidiZone is a Python-based smart humidity control system designed to monitor a
 ## Zones
 | Zone | Name | Min Humidity | Max Humidity |
 |------|------|-------------|-------------|
-| 1 | Propagation | 85% | 95% |
-| 2 | Vegetation | 60% | 75% |
-| 3 | Flowering | 45% | 60% |
-| 4 | Cold Storage | 90% | 95% |
+| 1 | Propagation | 70% | 80% |
+| 2 | Vegetation | 60% | 70% |
+| 3 | Flowering | 40% | 60% |
+| 4 | Storage | 50% | 65% |
 
 ---
 
