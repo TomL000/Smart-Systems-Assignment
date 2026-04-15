@@ -92,7 +92,7 @@ Authentication uses a local password file (`password.txt`). This is for developm
 ---
 
 ## Authors
-**Harry Pert**
-**Jake Dinning**
+**Harry Pert** ,
+**Jake Dinning** ,
 **Tom Lunenborg**
 *Group Assignment - Module U19969*
