@@ -9,21 +9,21 @@ from processing import humidityMonitor, zoneComparison
 from actuation import actuate
 
 #colour palette
-BG_MAIN = "#1e1e2e"
-BG_PANEL = "#2a2a3e"
-FG_TEXT = "#cdd6f4"
-FG_HEADER = "#89b4fa"
-FG_ALERT = "#f38ba8"
-FG_OK = "#a6e3a1"
-FG_WARN = "#fab387"
+BG_MAIN = "#1e1e2e" #navy blue
+BG_PANEL = "#2a2a3e" #lighter navy blue
+FG_TEXT = "#cdd6f4" #white blue tint
+FG_HEADER = "#89b4fa" #baby blue
+FG_ALERT = "#f38ba8" #light pink
+FG_OK = "#a6e3a1" #light green
+FG_WARN = "#fab387" #light orange
 
 #set window properties
 class HumidityApp:
-    def __init__(self, root): #initialise properties
-        self.root = root
+    def __init__(self, root): #initialise window properties
+        self.root = root #stores the main window in the class to be called by other methods
         self.root.title("Humidizone Management System")
-        self.root.configure(bg=BG_MAIN)
-        self.root.geometry("700x600")
+        self.root.configure(bg=BG_MAIN) #set background colour
+        self.root.geometry("700x600") #set window size
         #set states
         self.systemRunning = False
         self.adminLoggedIn = False
@@ -36,12 +36,12 @@ class HumidityApp:
         
     def buildHeader(self):
         #top section: title & system status
-        frame = tk.Frame(self.root, bg=BG_MAIN)
-        frame.pack(fill="x", padx=20, pady=10)
-        tk.Label(frame, text="HUMIDIZONE MANAGEMENT SYSTEM",
-            font=("Helvetica", 16, "bold"),
-            bg=BG_MAIN, fg=FG_HEADER).pack()
-        #dynamic status lable, off by default
+        frame = tk.Frame(self.root, bg=BG_MAIN) #create frame in main window
+        frame.pack(fill="x", padx=20, pady=10) #'.pack()' calls the layout manager, 'fill="x"' streches the frame horizontally, sets padding by pixels
+        tk.Label(frame, text="HUMIDIZONE MANAGEMENT SYSTEM", #set label
+            font=("Helvetica", 16, "bold"), #set font, size, and accent
+            bg=BG_MAIN, fg=FG_HEADER).pack() #set colour: background & foreground
+        #dynamic status label, off by default
         self.statusLabel = tk.Label(frame, text="System Offline",
             font=("Helvetica", 10),
             bg=BG_MAIN, fg=FG_ALERT)
@@ -91,6 +91,7 @@ class HumidityApp:
         self.actuationFrame = frame
         self.actuationLabels = {} #stores label references by zoneNum
 
+        #build rows per zone from zone.json
         with open("zones.json", "r") as f:
             data = json.load(f)
         for zone in data["zones"]:
@@ -128,31 +129,33 @@ class HumidityApp:
             font=("Helvetica", 10),
             width=15).grid(row=0, column=2, padx=5, pady=5)
                 
-    def startSystem(self):
-        if not self.systemRunning:
-            self.systemRunning = True
-            self.statusLabel.config(text="System Online", fg=FG_OK)
-            dev_thread = threading.Thread(target=Simulation.run,daemon=True)
-            dev_thread.start()
-            self.root.after(12000, self.updateReadings)
+    def startSystem(self): #when user clicks start system
+        if not self.systemRunning: #prevents the system starting twice if clicked again
+            self.systemRunning = True #updates system flag to running
+            self.statusLabel.config(text="System Online", fg=FG_OK) #update status label
+            dev_thread = threading.Thread(target=Simulation.run,daemon=True) #creates a background thread that runs 'Simulation.run()', 'daemon=True' stops the thread when window closes
+            dev_thread.start() #starts thread
+            self.root.after(12000, self.updateReadings) #waits 12 seconds before populating readings giving the simulation enough time to access the database
 
-    def stopSystem(self):
+    def stopSystem(self): #when user clicks stop system
         self.systemRunning = False
         self.statusLabel.config(text="Systems Offline", fg=FG_ALERT)
         #reset all actuation labels to offline
         for label in self.actuationLabels.values():
             label.config(text="OFFLINE", fg=FG_ALERT)
                 
-    def updateReadings(self):
+    def updateReadings(self): 
         if not self.systemRunning:
             return
         
+        #connect to databse
         sqlConnection = sqlite3.connect('humidity.db')
         sqlCursor = sqlConnection.cursor()
 
         with open("zones.json", "r") as f:
             data = json.load(f)
 
+        #fetch readings from database
         for zone in data["zones"]:
             zoneNum = zone["zoneNum"]
             tableName = f"zone{zoneNum}_{zone['zoneName']}"
@@ -254,11 +257,11 @@ class HumidityApp:
             width=10).grid(row=0, column=2, padx=5, pady=5)
     
     def adjustThresholds(self):
-        dialog = tk.Toplevel(self.root)
+        dialog = tk.Toplevel(self.root) #pop-up menu as child
         dialog.title("Adjust Thresholds")
         dialog.configure(bg=BG_MAIN)
         dialog.geometry("500x300")
-        dialog.resizable(False, False)
+        dialog.resizable(False, False) #non-sizable
 
         with open("zones.json", "r") as f:
             data = json.load(f)
