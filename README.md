@@ -58,7 +58,7 @@ The frontend is built using Tkinter, Python's built-in GUI library. It provides:
 Admin features are hidden by default and require authentication to access.
 - **Login** - Click "Login as Admin" and enter the admin password
 - **Adjust Thresholds** - Modify min/max humidity thresholds per zone
-- **Manual Override** - Manually force actuator state per zone
+- **Manual Override** - Manually force actuator state per zone (non-functional in current build)
 - **Logout** - Hides admin controls
 
 ### Authentication
